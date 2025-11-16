@@ -65,7 +65,7 @@ namespace osu.Framework.IO.Stores
         {
             if (store is IGlyphStore gs)
             {
-                if (gs is RawCachingGlyphStore raw && raw.CacheStorage == null)
+                if (gs is ICachingGlyphStore raw && raw.CacheStorage == null)
                     raw.CacheStorage = cacheStorage;
 
                 glyphStores.Add(gs);

@@ -26,12 +26,18 @@ namespace osu.Framework.IO.Stores
     /// This results in memory efficient lookups with good performance on solid state backed devices.
     /// Consider <see cref="TimedExpiryGlyphStore"/> if disk IO is limited and memory usage is not an issue.
     /// </remarks>
-    public class RawCachingGlyphStore : GlyphStore
+    public class RawCachingGlyphStore : GlyphStore, ICachingGlyphStore
     {
         /// <summary>
         /// A storage backing to be used for storing decompressed glyph sheets.
         /// </summary>
         internal Storage? CacheStorage { get; set; }
+
+        Storage? ICachingGlyphStore.CacheStorage
+        {
+            get => CacheStorage;
+            set => CacheStorage = value;
+        }
 
         private readonly Dictionary<string, Stream> pageStreamHandles = new Dictionary<string, Stream>();
 
