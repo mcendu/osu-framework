@@ -1,12 +1,14 @@
 // Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
+using System;
 using System.Diagnostics;
 using System.Reflection;
 using BenchmarkDotNet.Attributes;
 using osu.Framework.Extensions;
 using osu.Framework.Graphics.Sprites;
 using osu.Framework.IO.Stores;
+using osu.Framework.Testing;
 using SixLabors.ImageSharp.Memory;
 
 namespace osu.Framework.Benchmarks
@@ -32,6 +34,17 @@ namespace osu.Framework.Benchmarks
         {
             using (var store = new OutlineGlyphStore(baseResources, font_name))
                 runFor(store);
+        }
+
+        [Benchmark]
+        public void BenchmarkCaching()
+        {
+            using (var temp = new TemporaryNativeStorage("fontstore-test" + Guid.NewGuid()))
+            using (var store = new CachingOutlineGlyphStore(baseResources, font_name))
+            {
+                store.CacheStorage = temp;
+                runFor(store);
+            }
         }
 
         private void runFor(OutlineGlyphStore store)
