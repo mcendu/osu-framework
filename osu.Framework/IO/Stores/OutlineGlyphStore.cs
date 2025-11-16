@@ -127,6 +127,15 @@ namespace osu.Framework.IO.Stores
 
         CharacterGlyph IResourceStore<CharacterGlyph>.Get(string name) => Get(name[0])!;
 
+        protected virtual TextureUpload? GetCachedGlyph(uint glyph)
+        {
+            return null;
+        }
+
+        protected virtual void CacheGlyph(uint glyph, TextureUpload rendered)
+        {
+        }
+
         public TextureUpload Get(string name)
         {
             if (name.Length > 1 && !name.StartsWith($@"{FontName}/", StringComparison.Ordinal))
@@ -135,7 +144,17 @@ namespace osu.Framework.IO.Stores
             char c = name.Last();
             uint glyphIndex = Font.GetGlyphIndex(c);
 
-            return Font.RasterizeGlyph(glyphIndex, rawVariation)!;
+            var cached = GetCachedGlyph(glyphIndex);
+
+            if (cached is not null)
+                return cached;
+
+            var image = Font.RasterizeGlyph(glyphIndex, rawVariation);
+
+            if (image is not null)
+                CacheGlyph(glyphIndex, image);
+
+            return image!;
         }
 
         public async Task<TextureUpload> GetAsync(string name, CancellationToken cancellationToken = default)
@@ -146,7 +165,14 @@ namespace osu.Framework.IO.Stores
             char c = name.Last();
             uint glyphIndex = await Font.GetGlyphIndexAsync(c).ConfigureAwait(false);
 
-            return await Font.RasterizeGlyphAsync(glyphIndex, rawVariation, cancellationToken).ConfigureAwait(false);
+            var cached = GetCachedGlyph(glyphIndex);
+
+            if (cached is not null)
+                return cached;
+
+            var image = await Font.RasterizeGlyphAsync(glyphIndex, rawVariation, cancellationToken).ConfigureAwait(false);
+            CacheGlyph(glyphIndex, image);
+            return image;
         }
 
         public Stream GetStream(string name) => throw new NotSupportedException();
