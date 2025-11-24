@@ -257,7 +257,7 @@ namespace osu.Framework
         protected virtual OnlineStore CreateOnlineStore() => new OnlineStore();
 
         /// <summary>
-        /// Add a font to be globally accessible to the game.
+        /// Add a bitmap font to be globally accessible to the game.
         /// </summary>
         /// <param name="store">The backing store with font resources.</param>
         /// <param name="assetName">The base name of the font.</param>
@@ -267,6 +267,35 @@ namespace osu.Framework
 
         private void addFont(FontStore target, ResourceStore<byte[]> store, string assetName = null)
             => target.AddTextureSource(new RawCachingGlyphStore(store, assetName, Host.CreateTextureLoaderStore(store)));
+
+        /// <summary>
+        /// Add an outline font to be globally accessible to the game.
+        /// </summary>
+        /// <param name="store">The backing store with font resources.</param>
+        /// <param name="assetName">The base name of the font.</param>
+        /// <param name="target">An optional target store to add the font to. If not specified, <see cref="Fonts"/> is used.</param>
+        /// <returns>The newly added font family from which fonts can be instantiated.</returns>
+        public void AddOutlineFont(ResourceStore<byte[]> store, string assetName, FontStore target = null)
+            => (target ?? Fonts).AddTextureSource(new OutlineGlyphStore(store, assetName));
+
+        /// <summary>
+        /// Add a variable font to be globally accessible to the game.
+        /// </summary>
+        /// <remarks>
+        /// This does not instantiate any glyph stores. Use
+        /// <see cref="OutlineFontStore.AddInstance(string, string?)"/>
+        /// on the returned font store to make the font usable.
+        /// </remarks>
+        /// <param name="store">The backing store with font resources.</param>
+        /// <param name="assetName">The base name of the font.</param>
+        /// <param name="target">An optional target store to add the font to. If not specified, <see cref="Fonts"/> is used.</param>
+        /// <returns>The newly added font family from which fonts can be instantiated.</returns>
+        public OutlineFontStore AddVariableFont(ResourceStore<byte[]> store, string assetName, FontStore target = null)
+        {
+            var nestedStore = new OutlineFontStore(Host.Renderer, store, assetName);
+            (target ?? Fonts).AddStore(nestedStore);
+            return nestedStore;
+        }
 
         protected override void LoadComplete()
         {
